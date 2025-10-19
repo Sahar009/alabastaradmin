@@ -1,6 +1,6 @@
 // Admin API Service
-// const API_BASE_URL = 'http://localhost:8000/api/admin';
-const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
+const API_BASE_URL = 'http://localhost:8000/api/admin';
+// const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
 
 class AdminAPI {
   // Get auth token from localStorage
@@ -214,6 +214,120 @@ class AdminAPI {
     return this.request(`/bookings/${bookingId}/payment-status`, {
       method: 'PUT',
       body: JSON.stringify({ paymentStatus }),
+    });
+  }
+
+  // ==================== SERVICE CATEGORIES MANAGEMENT ====================
+
+  async getCategories(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/categories${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getCategoryById(categoryId) {
+    return this.request(`/categories/${categoryId}`);
+  }
+
+  async createCategory(categoryData) {
+    return this.request('/categories', {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async updateCategory(categoryId, categoryData) {
+    return this.request(`/categories/${categoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    });
+  }
+
+  async deleteCategory(categoryId) {
+    return this.request(`/categories/${categoryId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== SERVICES MANAGEMENT ====================
+
+  async getServices(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/services${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getServiceById(serviceId) {
+    return this.request(`/services/${serviceId}`);
+  }
+
+  async updateServiceStatus(serviceId, isActive) {
+    return this.request(`/services/${serviceId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  // ==================== SUBSCRIPTION PLANS MANAGEMENT ====================
+
+  async getSubscriptionPlans(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/subscription-plans${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getSubscriptionPlanById(planId) {
+    return this.request(`/subscription-plans/${planId}`);
+  }
+
+  async createSubscriptionPlan(planData) {
+    return this.request('/subscription-plans', {
+      method: 'POST',
+      body: JSON.stringify(planData),
+    });
+  }
+
+  async updateSubscriptionPlan(planId, planData) {
+    return this.request(`/subscription-plans/${planId}`, {
+      method: 'PUT',
+      body: JSON.stringify(planData),
+    });
+  }
+
+  async deleteSubscriptionPlan(planId) {
+    return this.request(`/subscription-plans/${planId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== PROVIDER SUBSCRIPTIONS MANAGEMENT ====================
+
+  async getSubscriptions(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/subscriptions${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getSubscriptionById(subscriptionId) {
+    return this.request(`/subscriptions/${subscriptionId}`);
+  }
+
+  async updateSubscriptionStatus(subscriptionId, status) {
+    return this.request(`/subscriptions/${subscriptionId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  async updateSubscriptionAutoRenew(subscriptionId, autoRenew) {
+    return this.request(`/subscriptions/${subscriptionId}/auto-renew`, {
+      method: 'PUT',
+      body: JSON.stringify({ autoRenew }),
+    });
+  }
+
+  // ==================== SUBSCRIPTION PLAN STATUS TOGGLE ====================
+
+  async toggleSubscriptionPlanStatus(planId, isActive) {
+    return this.request(`/subscription-plans/${planId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ isActive }),
     });
   }
 

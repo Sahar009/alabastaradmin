@@ -50,7 +50,7 @@ const Layout = ({ children }) => {
     { id: 'providers', label: 'Providers', icon: UserCheck, path: '/providers' },
     { id: 'bookings', label: 'Bookings', icon: Calendar, path: '/bookings' },
     { id: 'services', label: 'Services', icon: Wrench, path: '/services' },
-    { id: 'payments', label: 'Payments', icon: CreditCard, path: '/payments' },
+    { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, path: '/subscriptions' },
     { id: 'reviews', label: 'Reviews', icon: Star, path: '/reviews' },
     { id: 'notifications', label: 'Notifications', icon: Bell, path: '/notifications' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },

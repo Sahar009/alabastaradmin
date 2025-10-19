@@ -8,6 +8,7 @@ import ProvidersPage from './pages/Providers';
 import Bookings from './pages/Bookings';
 import Services from './pages/Services';
 import Payments from './pages/Payments';
+import Subscriptions from './pages/Subscriptions';
 import Reviews from './pages/Reviews';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
@@ -81,7 +82,7 @@ function App() {
               <Route path="/providers" element={<ProvidersPage />} />
               <Route path="/bookings" element={<Bookings />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/payments" element={<Payments />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
               <Route path="/reviews" element={<Reviews />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
