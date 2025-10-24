@@ -1,30 +1,40 @@
 import { useState, useEffect } from 'react';
-import { Search, Star, ThumbsUp, ThumbsDown, Flag } from 'lucide-react';
+import { Search, Star, ThumbsUp, ThumbsDown, Flag, Eye, Trash2, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import adminAPI from '../services/adminAPI';
 
 const Reviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [currentPage]);
 
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage
+      };
+
+      const response = await adminAPI.getReviews(params);
       
-      const mockReviews = [
-        { id: 1, customer: 'John Doe', provider: 'James Clean', rating: 5, comment: 'Excellent service! Very professional and thorough.', date: '2024-01-20', status: 'approved' },
-        { id: 2, customer: 'Sarah Johnson', provider: 'Sarah Fix', rating: 4, comment: 'Good work, arrived on time and fixed the issue quickly.', date: '2024-01-21', status: 'approved' },
-        { id: 3, customer: 'Mike Wilson', provider: 'Mike Paint', rating: 3, comment: 'Average service, could be better.', date: '2024-01-22', status: 'pending' },
-        { id: 4, customer: 'Emily Brown', provider: 'Emily Garden', rating: 5, comment: 'Amazing work! My garden looks beautiful now.', date: '2024-01-23', status: 'approved' }
-      ];
-      
-      setReviews(mockReviews);
+      if (response.success && response.data) {
+        setReviews(response.data.reviews);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalReviews(response.data.pagination.totalReviews);
+      } else {
+        throw new Error('Failed to fetch reviews');
+      }
     } catch (error) {
+      console.error('Error fetching reviews:', error);
       toast.error('Failed to fetch reviews');
     } finally {
       setLoading(false);
@@ -32,22 +42,39 @@ const Reviews = () => {
   };
 
   const filteredReviews = reviews.filter(review =>
-    review.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    review.comment.toLowerCase().includes(searchTerm.toLowerCase())
+    review.User?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    review.ProviderProfile?.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    review.comment?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleStatusChange = async (reviewId, newStatus) => {
+  const handleVisibilityChange = async (reviewId, isVisible) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await adminAPI.updateReviewVisibility(reviewId, isVisible);
       
       setReviews(prev => prev.map(review => 
-        review.id === reviewId ? { ...review, status: newStatus } : review
+        review.id === reviewId ? { ...review, isVisible } : review
       ));
       
-      toast.success(`Review ${newStatus} successfully`);
+      toast.success(`Review ${isVisible ? 'made visible' : 'hidden'} successfully`);
     } catch (error) {
-      toast.error('Failed to update review status');
+      console.error('Error updating review visibility:', error);
+      toast.error('Failed to update review visibility');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      try {
+        await adminAPI.deleteReview(reviewId);
+        
+        setReviews(prev => prev.filter(review => review.id !== reviewId));
+        setTotalReviews(prev => prev - 1);
+        
+        toast.success('Review deleted successfully');
+      } catch (error) {
+        console.error('Error deleting review:', error);
+        toast.error('Failed to delete review');
+      }
     }
   };
 
@@ -61,16 +88,15 @@ const Reviews = () => {
     ));
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (isVisible) => {
     const statusClasses = {
-      approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-      rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+      true: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      false: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[status]}`}>
-        {status}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClasses[isVisible]}`}>
+        {isVisible ? 'Visible' : 'Hidden'}
       </span>
     );
   };
@@ -88,7 +114,18 @@ const Reviews = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reviews</h1>
-          <p className="text-slate-600 dark:text-slate-400">Manage customer reviews and ratings</p>
+          <p className="text-slate-600 dark:text-slate-400">
+            Manage customer reviews and ratings ({totalReviews} total reviews)
+          </p>
+        </div>
+        <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+          <button
+            onClick={fetchReviews}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -110,40 +147,47 @@ const Reviews = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{review.customer}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      {review.User?.fullName || 'Unknown Customer'}
+                    </h3>
                     <span className="text-slate-500 dark:text-slate-400">reviewed</span>
-                    <h4 className="text-lg font-semibold text-slate-900 dark:text-white">{review.provider}</h4>
+                    <h4 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      {review.ProviderProfile?.businessName || 'Unknown Provider'}
+                    </h4>
                   </div>
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="flex items-center">
                       {renderStars(review.rating)}
                     </div>
                     <span className="text-sm text-slate-500 dark:text-slate-400">
-                      {new Date(review.date).toLocaleDateString()}
+                      {new Date(review.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   <p className="text-slate-700 dark:text-slate-300 mb-4">{review.comment}</p>
                 </div>
                 <div className="flex flex-col items-end space-y-2">
-                  {getStatusBadge(review.status)}
+                  {getStatusBadge(review.isVisible)}
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleStatusChange(review.id, 'approved')}
+                      onClick={() => handleVisibilityChange(review.id, true)}
                       className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                     >
-                      <ThumbsUp size={14} />
-                      <span>Approve</span>
+                      <Eye size={14} />
+                      <span>Show</span>
                     </button>
                     <button
-                      onClick={() => handleStatusChange(review.id, 'rejected')}
+                      onClick={() => handleVisibilityChange(review.id, false)}
                       className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                     >
                       <ThumbsDown size={14} />
-                      <span>Reject</span>
+                      <span>Hide</span>
                     </button>
-                    <button className="flex items-center space-x-1 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
-                      <Flag size={14} />
-                      <span>Flag</span>
+                    <button 
+                      onClick={() => handleDeleteReview(review.id)}
+                      className="flex items-center space-x-1 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                    >
+                      <Trash2 size={14} />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>
@@ -151,6 +195,33 @@ const Reviews = () => {
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center text-sm text-slate-700 dark:text-slate-300">
+              <span>
+                Showing page {currentPage} of {totalPages} ({totalReviews} total reviews)
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

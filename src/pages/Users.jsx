@@ -18,10 +18,12 @@ import {
   Download,
   RefreshCw,
   Star,
-  Clock
+  Clock,
+  UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminAPI from '../services/adminAPI';
+import CreateAdminModal from '../components/CreateAdminModal';
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -30,6 +32,7 @@ const UsersPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
   
   // Pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -216,16 +219,23 @@ const UsersPage = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setShowCreateAdminModal(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Create Admin
+          </button>
+          <button
             onClick={fetchUsers}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">
+          {/* <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">
             <Download className="w-4 h-4" />
             Export
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -538,8 +548,8 @@ const UsersPage = () => {
             </div>
 
             <div className="p-6 space-y-8">
-              {/* Statistics Overview */}
-              {selectedUser.statistics && (
+              {/* Statistics Overview - Only show for non-admin users */}
+              {selectedUser.statistics && selectedUser.user.role !== 'admin' && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{selectedUser.statistics.totalBookings}</div>
@@ -645,8 +655,8 @@ const UsersPage = () => {
                 </div>
               </div>
 
-              {/* Customer Profile */}
-              {selectedUser.customerProfile && (
+              {/* Customer Profile - Only show for customer users */}
+              {selectedUser.customerProfile && selectedUser.user.role === 'customer' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Profile</h3>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -682,8 +692,8 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Provider Profile */}
-              {selectedUser.providerProfile && (
+              {/* Provider Profile - Only show for provider users */}
+              {selectedUser.providerProfile && selectedUser.user.role === 'provider' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Provider Profile</h3>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -742,8 +752,102 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Provider Registration Progress */}
-              {selectedUser.providerRegistrationProgress && (
+              {/* Provider Portfolio - Only show for provider users */}
+              {selectedUser.providerProfile && selectedUser.providerProfile.portfolio && selectedUser.user.role === 'provider' && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Portfolio</h3>
+                  
+                  {/* Brand Images */}
+                  {selectedUser.providerProfile.portfolio.brandImages && selectedUser.providerProfile.portfolio.brandImages.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">Brand Images ({selectedUser.providerProfile.portfolio.brandImages.length})</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {selectedUser.providerProfile.portfolio.brandImages.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image.url}
+                              alt={`Brand Image ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-shadow cursor-pointer"
+                              onClick={() => window.open(image.url, '_blank')}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                              </div>
+                            </div>
+                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-center">
+                              {image.type?.replace('_', ' ').toUpperCase() || 'Brand Image'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Documents */}
+                  {selectedUser.providerProfile.portfolio.documents && selectedUser.providerProfile.portfolio.documents.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-md font-medium text-gray-800 dark:text-gray-200">Documents ({selectedUser.providerProfile.portfolio.documents.length})</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedUser.providerProfile.portfolio.documents.map((doc, index) => (
+                          <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0">
+                                {doc.type === 'id_card' ? (
+                                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                    </svg>
+                                  </div>
+                                ) : (
+                                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                  {doc.type?.replace('_', ' ').toUpperCase() || 'Document'}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {doc.name || 'Document'}
+                                </p>
+                              </div>
+                              <div className="flex-shrink-0">
+                                <button
+                                  onClick={() => window.open(doc.url, '_blank')}
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                                  title="View Document"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Portfolio Items */}
+                  {(!selectedUser.providerProfile.portfolio.brandImages || selectedUser.providerProfile.portfolio.brandImages.length === 0) && 
+                   (!selectedUser.providerProfile.portfolio.documents || selectedUser.providerProfile.portfolio.documents.length === 0) && (
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No portfolio items available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Provider Registration Progress - Only show for provider users */}
+              {selectedUser.providerRegistrationProgress && selectedUser.user.role === 'provider' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Registration Progress</h3>
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -768,8 +872,8 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Bookings Section */}
-              {selectedUser.bookings && selectedUser.bookings.length > 0 && (
+              {/* Bookings Section - Only show for non-admin users */}
+              {selectedUser.bookings && selectedUser.bookings.length > 0 && selectedUser.user.role !== 'admin' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bookings ({selectedUser.bookings.length})</h3>
                   <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -807,8 +911,8 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Payments Section */}
-              {selectedUser.payments && selectedUser.payments.length > 0 && (
+              {/* Payments Section - Only show for non-admin users */}
+              {selectedUser.payments && selectedUser.payments.length > 0 && selectedUser.user.role !== 'admin' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payment History ({selectedUser.payments.length})</h3>
                   <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -847,8 +951,8 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Reviews Section */}
-              {selectedUser.reviews && (selectedUser.reviews.given?.length > 0 || selectedUser.reviews.received?.length > 0) && (
+              {/* Reviews Section - Only show for non-admin users */}
+              {selectedUser.reviews && (selectedUser.reviews.given?.length > 0 || selectedUser.reviews.received?.length > 0) && selectedUser.user.role !== 'admin' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews</h3>
                   
@@ -906,8 +1010,8 @@ const UsersPage = () => {
                 </div>
               )}
 
-              {/* Notifications Section */}
-              {selectedUser.notifications && selectedUser.notifications.length > 0 && (
+              {/* Notifications Section - Only show for non-admin users */}
+              {selectedUser.notifications && selectedUser.notifications.length > 0 && selectedUser.user.role !== 'admin' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Notifications ({selectedUser.notifications.length})</h3>
                   <div className="space-y-3 max-h-48 overflow-y-auto">
@@ -962,6 +1066,16 @@ const UsersPage = () => {
           </div>
         </div>
       )}
+
+      {/* Create Admin Modal */}
+      <CreateAdminModal
+        isOpen={showCreateAdminModal}
+        onClose={() => setShowCreateAdminModal(false)}
+        onSuccess={() => {
+          fetchUsers(); // Refresh the users list
+          setShowCreateAdminModal(false);
+        }}
+      />
     </div>
   );
 };

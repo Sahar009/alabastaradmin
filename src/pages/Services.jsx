@@ -34,10 +34,184 @@ import {
   Zap,
   Info,
   TrendingUp,
-  Activity
+  Activity,
+  Sparkles,
+  Hammer,
+  Droplets,
+  Wrench,
+  Car,
+  Home,
+  Heart,
+  Camera,
+  Music,
+  Palette,
+  Code,
+  BookOpen,
+  Gamepad2,
+  ShoppingBag,
+  Utensils,
+  Shirt,
+  TreePine,
+  Flower2,
+  Sun,
+  Moon,
+  Cloud,
+  Wind,
+  Thermometer,
+  Lightbulb,
+  Battery,
+  Cpu,
+  HardDrive,
+  Monitor,
+  Smartphone,
+  Headphones,
+  Mic,
+  Volume2,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Repeat,
+  Shuffle,
+  ThumbsUp,
+  ThumbsDown,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  Flag,
+  Bell,
+  Lock,
+  Unlock,
+  Key,
+  Shield,
+  Award,
+  Trophy,
+  Gift,
+  Package,
+  Truck,
+  Plane,
+  Train,
+  Ship,
+  Bike,
+  Bus,
+  Map,
+  Compass,
+  Navigation,
+  Target,
+  Crosshair,
+  Focus,
+  Scan,
+  QrCode,
+  Barcode,
+  CreditCard,
+  Banknote,
+  Coins,
+  Receipt,
+  Calculator,
+  Percent,
+  TrendingDown,
+  BarChart3,
+  PieChart,
+  LineChart,
+  Timer
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminAPI from '../services/adminAPI';
+
+// Icon mapping component
+const CategoryIcon = ({ iconName, className = "w-6 h-6" }) => {
+  const iconMap = {
+    // Core service icons (verified to exist in Lucide React)
+    sparkles: Sparkles,
+    hammer: Hammer,
+    zap: Zap,
+    droplets: Droplets,
+    wrench: Wrench,
+    car: Car,
+    home: Home,
+    heart: Heart,
+    camera: Camera,
+    music: Music,
+    palette: Palette,
+    code: Code,
+    book: BookOpen,
+    gamepad: Gamepad2,
+    shopping: ShoppingBag,
+    utensils: Utensils,
+    shirt: Shirt,
+    tree: TreePine,
+    flower: Flower2,
+    sun: Sun,
+    moon: Moon,
+    cloud: Cloud,
+    wind: Wind,
+    thermometer: Thermometer,
+    lightbulb: Lightbulb,
+    battery: Battery,
+    cpu: Cpu,
+    harddrive: HardDrive,
+    monitor: Monitor,
+    smartphone: Smartphone,
+    headphones: Headphones,
+    mic: Mic,
+    volume: Volume2,
+    play: Play,
+    pause: Pause,
+    skipback: SkipBack,
+    skipforward: SkipForward,
+    repeat: Repeat,
+    shuffle: Shuffle,
+    thumbsup: ThumbsUp,
+    thumbsdown: ThumbsDown,
+    message: MessageCircle,
+    share: Share2,
+    bookmark: Bookmark,
+    flag: Flag,
+    bell: Bell,
+    lock: Lock,
+    unlock: Unlock,
+    key: Key,
+    shield: Shield,
+    award: Award,
+    trophy: Trophy,
+    gift: Gift,
+    package: Package,
+    truck: Truck,
+    plane: Plane,
+    train: Train,
+    ship: Ship,
+    bike: Bike,
+    bus: Bus,
+    map: Map,
+    compass: Compass,
+    navigation: Navigation,
+    target: Target,
+    crosshair: Crosshair,
+    focus: Focus,
+    scan: Scan,
+    qrcode: QrCode,
+    barcode: Barcode,
+    creditcard: CreditCard,
+    banknote: Banknote,
+    coins: Coins,
+    receipt: Receipt,
+    calculator: Calculator,
+    percent: Percent,
+    trendingup: TrendingUp,
+    trendingdown: TrendingDown,
+    barchart: BarChart3,
+    piechart: PieChart,
+    linechart: LineChart,
+    activity: Activity,
+    timer: Timer,
+    clock: Clock,
+    calendar: Calendar
+  };
+
+  const IconComponent = iconMap[iconName?.toLowerCase()] || Tag;
+  
+  return <IconComponent className={className} />;
+};
 
 const ServicesPage = () => {
   const [categories, setCategories] = useState([]);
@@ -548,8 +722,8 @@ const ServicesPage = () => {
                     >
                       <div className={`${viewMode === 'list' ? 'flex items-center space-x-4' : ''}`}>
                         <div className={`${viewMode === 'list' ? 'flex-shrink-0' : 'flex items-center justify-between mb-4'}`}>
-                          <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-500 rounded-lg flex items-center justify-center text-white text-xl">
-                            {category.icon || '📁'}
+                          <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-500 rounded-lg flex items-center justify-center text-white">
+                            <CategoryIcon iconName={category.icon} className="w-6 h-6" />
                           </div>
                           {viewMode === 'grid' && (
                             <div className="flex items-center space-x-2">
@@ -686,7 +860,7 @@ const ServicesPage = () => {
                               </h3>
                               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 <Tag className="w-4 h-4 mr-1" />
-                                {service.Category?.name || 'Uncategorized'}
+                                {service.ServiceCategory?.name || 'Uncategorized'}
                               </div>
                             </div>
                             {viewMode === 'list' && (
@@ -703,16 +877,6 @@ const ServicesPage = () => {
                           )}
                           
                           <div className={`${viewMode === 'list' ? 'flex items-center justify-between mt-4' : 'flex justify-between items-center mt-4'}`}>
-                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                <DollarSign className="w-4 h-4 mr-1" />
-                                ₦{parseFloat(service.basePrice).toLocaleString()}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                {getPricingTypeBadge(service.pricingType)}
-                              </div>
-                            </div>
-                            
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() => openServiceModal(service.id)}
@@ -826,15 +990,23 @@ const ServicesPage = () => {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Icon (Emoji)
+                        Icon Name
                       </label>
-                      <input
-                        type="text"
-                        value={categoryFormData.icon}
-                        onChange={(e) => setCategoryFormData({...categoryFormData, icon: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                        placeholder="📁 (emoji)"
-                      />
+                      <div className="flex items-center space-x-3">
+                        <input
+                          type="text"
+                          value={categoryFormData.icon}
+                          onChange={(e) => setCategoryFormData({...categoryFormData, icon: e.target.value})}
+                          className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                          placeholder="sparkles, hammer, zap, droplets, etc."
+                        />
+                        <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-orange-500 rounded-lg flex items-center justify-center text-white">
+                          <CategoryIcon iconName={categoryFormData.icon} className="w-5 h-5" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Enter icon name (e.g., sparkles, hammer, zap, droplets)
+                      </p>
                     </div>
                     
                     <div className="flex items-center">
@@ -920,7 +1092,7 @@ const ServicesPage = () => {
                           <Tag className="w-4 h-4 text-gray-400 mr-3" />
                           <span className="text-gray-600 dark:text-gray-400">Category:</span>
                           <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                            {selectedService.Category?.name || 'Uncategorized'}
+                            {selectedService.ServiceCategory?.name || 'Uncategorized'}
                           </span>
                         </div>
                         <div className="flex items-center text-sm">
@@ -947,21 +1119,21 @@ const ServicesPage = () => {
                           <Users className="w-4 h-4 text-gray-400 mr-3" />
                           <span className="text-gray-600 dark:text-gray-400">Business:</span>
                           <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                            {selectedService.Provider?.businessName || 'N/A'}
+                            {selectedService.ProviderProfile?.businessName || 'N/A'}
                           </span>
                         </div>
                         <div className="flex items-center text-sm">
                           <Mail className="w-4 h-4 text-gray-400 mr-3" />
                           <span className="text-gray-600 dark:text-gray-400">Email:</span>
                           <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                            {selectedService.Provider?.User?.email || 'N/A'}
+                            {selectedService.ProviderProfile?.User?.email || 'N/A'}
                           </span>
                         </div>
                         <div className="flex items-center text-sm">
                           <ShieldCheck className="w-4 h-4 text-gray-400 mr-3" />
                           <span className="text-gray-600 dark:text-gray-400">Status:</span>
                           <span className="ml-2 text-gray-900 dark:text-white font-medium">
-                            {selectedService.Provider?.verificationStatus === 'verified' ? 'Verified' : 'Pending'}
+                            {selectedService.ProviderProfile?.verificationStatus === 'verified' ? 'Verified' : 'Pending'}
                           </span>
                         </div>
                       </div>

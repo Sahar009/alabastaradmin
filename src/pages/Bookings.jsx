@@ -9,7 +9,6 @@ import {
   XCircle,
   Clock,
   MapPin,
-  DollarSign,
   User,
   UserCheck,
   ChevronLeft,
@@ -40,7 +39,6 @@ const BookingsPage = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
   const [dateFromFilter, setDateFromFilter] = useState('');
   const [dateToFilter, setDateToFilter] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
@@ -58,7 +56,6 @@ const BookingsPage = () => {
         limit: itemsPerPage,
         search: searchTerm,
         status: statusFilter,
-        paymentStatus: paymentStatusFilter,
         dateFrom: dateFromFilter,
         dateTo: dateToFilter,
         sortBy,
@@ -120,28 +117,6 @@ const BookingsPage = () => {
     }
   };
 
-  const handlePaymentStatusUpdate = async (bookingId, paymentStatus) => {
-    try {
-      const response = await adminAPI.updateBookingPaymentStatus(bookingId, paymentStatus);
-      if (response.success) {
-        toast.success('Payment status updated successfully');
-        fetchBookings(); // Refresh the list
-        if (selectedBooking && selectedBooking.booking.id === bookingId) {
-          // Update the selected booking in modal
-          setSelectedBooking(prev => ({
-            ...prev,
-            booking: { ...prev.booking, paymentStatus }
-          }));
-        }
-      } else {
-        throw new Error(response.message || 'Failed to update payment status');
-      }
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-      toast.error('Failed to update payment status');
-    }
-  };
-
   const handleFilterChange = () => {
     setCurrentPage(1); // Reset to first page when filters change
     fetchBookings();
@@ -169,24 +144,6 @@ const BookingsPage = () => {
     );
   };
 
-  const getPaymentStatusBadge = (paymentStatus) => {
-    const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', label: 'Pending' },
-      paid: { color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', label: 'Paid' },
-      refunded: { color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', label: 'Refunded' }
-    };
-
-    const config = statusConfig[paymentStatus] || statusConfig.pending;
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        {paymentStatus === 'pending' && <Clock className="w-3 h-3" />}
-        {paymentStatus === 'paid' && <CheckCircle className="w-3 h-3" />}
-        {paymentStatus === 'refunded' && <XCircle className="w-3 h-3" />}
-        {config.label}
-      </span>
-    );
-  };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -195,13 +152,6 @@ const BookingsPage = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(amount);
   };
 
   if (loading && bookings.length === 0) {
@@ -228,16 +178,16 @@ const BookingsPage = () => {
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+          {/* <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
             <Download className="w-4 h-4" />
             Export
-          </button>
+          </button> */}
         </div>
       </div>
 
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -262,18 +212,6 @@ const BookingsPage = () => {
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
-          </select>
-
-          {/* Payment Status Filter */}
-          <select
-            value={paymentStatusFilter}
-            onChange={(e) => setPaymentStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Payment Status</option>
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="refunded">Refunded</option>
           </select>
 
           {/* Apply Filters Button */}
@@ -329,7 +267,7 @@ const BookingsPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -357,17 +295,6 @@ const BookingsPage = () => {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {formatCurrency(bookings.reduce((sum, b) => sum + parseFloat(b.totalAmount), 0))}
-              </p>
-            </div>
-            <DollarSign className="w-8 h-8 text-purple-600" />
-          </div>
-        </div>
       </div>
 
       {/* Bookings Table */}
@@ -392,13 +319,7 @@ const BookingsPage = () => {
                   Scheduled
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Payment
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
@@ -467,18 +388,7 @@ const BookingsPage = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {formatCurrency(booking.totalAmount)}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {booking.currency}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(booking.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getPaymentStatusBadge(booking.paymentStatus)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
@@ -564,24 +474,30 @@ const BookingsPage = () => {
 
             <div className="p-6 space-y-8">
               {/* Booking Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {formatCurrency(selectedBooking.booking.totalAmount)}
-                  </div>
-                  <div className="text-sm text-blue-600 dark:text-blue-400">Total Amount</div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
                     {formatDate(selectedBooking.booking.scheduledAt)}
                   </div>
-                  <div className="text-sm text-green-600 dark:text-green-400">Scheduled Date</div>
+                  <div className="text-xs text-green-600 dark:text-green-400">Scheduled Date</div>
                 </div>
                 <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                     {selectedBooking.booking.status}
                   </div>
-                  <div className="text-sm text-purple-600 dark:text-purple-400">Current Status</div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400">Status</div>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    ₦{parseFloat(selectedBooking.booking.totalAmount).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400">Total Amount</div>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                  <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                    {selectedBooking.booking.paymentStatus}
+                  </div>
+                  <div className="text-xs text-orange-600 dark:text-orange-400">Payment Status</div>
                 </div>
               </div>
 
@@ -599,16 +515,24 @@ const BookingsPage = () => {
                       <div className="mt-1">{getStatusBadge(selectedBooking.booking.status)}</div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Status</label>
-                      <div className="mt-1">{getPaymentStatusBadge(selectedBooking.booking.paymentStatus)}</div>
-                    </div>
-                    <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Escrow Status</label>
                       <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.escrowStatus}</p>
                     </div>
                     <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.currency}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Service ID</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.serviceId || 'Not specified'}</p>
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Created</label>
                       <p className="text-sm text-gray-900 dark:text-white">{formatDate(selectedBooking.booking.createdAt)}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Updated</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{formatDate(selectedBooking.booking.updatedAt)}</p>
                     </div>
                   </div>
                 </div>
@@ -618,24 +542,49 @@ const BookingsPage = () => {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Category</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.category || 'N/A'}</p>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.category || 'Not specified'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Subcategories</label>
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {selectedBooking.providerProfile?.subcategories && selectedBooking.providerProfile.subcategories.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {selectedBooking.providerProfile.subcategories.map((subcat, index) => (
+                              <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs">
+                                {subcat}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>Not specified</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location Address</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.locationAddress || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location City</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.locationCity || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location State</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.locationState || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Coordinates</label>
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {selectedBooking.booking.locationAddress || 
-                         (selectedBooking.booking.locationCity && selectedBooking.booking.locationState 
-                           ? `${selectedBooking.booking.locationCity}, ${selectedBooking.booking.locationState}`
-                           : 'N/A')
+                        {selectedBooking.booking.latitude && selectedBooking.booking.longitude 
+                          ? `${selectedBooking.booking.latitude}, ${selectedBooking.booking.longitude}`
+                          : 'Not specified'
                         }
                       </p>
                     </div>
-                    {selectedBooking.booking.notes && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.notes}</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                      <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking.notes && selectedBooking.booking.notes.trim() ? selectedBooking.booking.notes : 'No notes provided'}</p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -647,20 +596,48 @@ const BookingsPage = () => {
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.customer?.fullName || 'N/A'}</p>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer ID</label>
+                        <p className="text-sm text-gray-900 dark:text-white font-mono">{selectedBooking.booking?.customer?.id || 'Not available'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.fullName || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.customer?.email || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.email || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.customer?.phone || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.phone || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Alternative Phone</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.alternativePhone && selectedBooking.booking.customer.alternativePhone.trim() ? selectedBooking.booking.customer.alternativePhone : 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.role || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.customer?.status || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.status || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Verified</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.isEmailVerified ? 'Yes' : 'No'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Verified</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.isPhoneVerified ? 'Yes' : 'No'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Joined Date</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.createdAt ? formatDate(selectedBooking.booking.customer.createdAt) : 'Not available'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Login</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.customer?.lastLoginAt ? formatDate(selectedBooking.booking.customer.lastLoginAt) : 'Never'}</p>
                       </div>
                     </div>
                   </div>
@@ -671,25 +648,66 @@ const BookingsPage = () => {
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="space-y-3">
                       <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider ID</label>
+                        <p className="text-sm text-gray-900 dark:text-white font-mono">{selectedBooking.booking?.providerProfile?.id || 'Not available'}</p>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Business Name</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.businessName || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.businessName || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Person</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.User?.fullName || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.User?.fullName || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.User?.email || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.User?.email || 'Not specified'}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.providerProfile?.User?.phone || 'N/A'}</p>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.User?.phone || 'Not specified'}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Alternative Phone</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.User?.alternativePhone && selectedBooking.booking.providerProfile.User.alternativePhone.trim() ? selectedBooking.booking.providerProfile.User.alternativePhone : 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Category</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.category || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Subcategories</label>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {selectedBooking.booking?.providerProfile?.subcategories && selectedBooking.booking.providerProfile.subcategories.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {selectedBooking.booking.providerProfile.subcategories.map((subcat, index) => (
+                                <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs">
+                                  {subcat}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>Not specified</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.bio && selectedBooking.booking.providerProfile.bio.trim() ? selectedBooking.booking.providerProfile.bio : 'No bio provided'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {selectedBooking.booking?.providerProfile?.locationCity && selectedBooking.booking.providerProfile?.locationState 
+                            ? `${selectedBooking.booking.providerProfile.locationCity}, ${selectedBooking.booking.providerProfile.locationState}`
+                            : 'Not specified'
+                          }
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification Status</label>
                         <div className="mt-1">
-                          {selectedBooking.providerProfile?.verificationStatus === 'verified' ? (
+                          {selectedBooking.booking?.providerProfile?.verificationStatus === 'verified' ? (
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                               <CheckCircle className="w-3 h-3" />
                               Verified
@@ -702,15 +720,55 @@ const BookingsPage = () => {
                           )}
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verified At</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.verifiedAt ? formatDate(selectedBooking.booking.providerProfile.verifiedAt) : 'Not verified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Referral Code</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.referralCode || 'Not assigned'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Referrals</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.totalReferrals || 0}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Commissions Earned</label>
+                        <p className="text-sm text-gray-900 dark:text-white">₦{parseFloat(selectedBooking.booking?.providerProfile?.totalCommissionsEarned || 0).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Portfolio</label>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          {selectedBooking.booking?.providerProfile?.portfolio && selectedBooking.booking.providerProfile.portfolio.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {selectedBooking.booking.providerProfile.portfolio.map((item, index) => (
+                                <span key={index} className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs">
+                                  {typeof item === 'string' ? item : JSON.stringify(item)}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>No portfolio items</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider Created</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.createdAt ? formatDate(selectedBooking.booking.providerProfile.createdAt) : 'Not available'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Updated</label>
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedBooking.booking?.providerProfile?.updatedAt ? formatDate(selectedBooking.booking.providerProfile.updatedAt) : 'Not available'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Payments Section */}
-              {selectedBooking.payments && selectedBooking.payments.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payment History ({selectedBooking.payments.length})</h3>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Payment History ({selectedBooking.payments?.length || 0})</h3>
+                {selectedBooking.payments && selectedBooking.payments.length > 0 ? (
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {selectedBooking.payments.map((payment) => (
                       <div key={payment.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -732,7 +790,7 @@ const BookingsPage = () => {
                               {payment.status}
                             </span>
                             <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                              {formatCurrency(payment.amount)}
+                              ₦{parseFloat(payment.amount).toLocaleString()}
                             </p>
                           </div>
                         </div>
@@ -744,19 +802,23 @@ const BookingsPage = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No payment history available for this booking</p>
+                  </div>
+                )}
+              </div>
 
               {/* Reviews Section */}
-              {selectedBooking.reviews && selectedBooking.reviews.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews ({selectedBooking.reviews.length})</h3>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reviews ({selectedBooking.reviews?.length || 0})</h3>
+                {selectedBooking.reviews && selectedBooking.reviews.length > 0 ? (
                   <div className="space-y-3 max-h-48 overflow-y-auto">
                     {selectedBooking.reviews.map((review) => (
                       <div key={review.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {review.reviewer?.fullName || 'Anonymous'}
+                            {review.User?.fullName || 'Anonymous'}
                           </p>
                           <div className="flex items-center gap-1">
                             {[...Array(5)].map((_, i) => (
@@ -771,31 +833,62 @@ const BookingsPage = () => {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No reviews available for this booking</p>
+                  </div>
+                )}
+              </div>
 
               {/* Notifications Section */}
-              {selectedBooking.notifications && selectedBooking.notifications.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Related Notifications ({selectedBooking.notifications.length})</h3>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Related Notifications ({selectedBooking.notifications?.length || 0})</h3>
+                {selectedBooking.notifications && selectedBooking.notifications.length > 0 ? (
                   <div className="space-y-3 max-h-48 overflow-y-auto">
                     {selectedBooking.notifications.map((notification) => (
                       <div key={notification.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                         <div className="flex items-center justify-between mb-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            notification.isRead ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          }`}>
-                            {notification.isRead ? 'Read' : 'Unread'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              notification.isRead ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                            }`}>
+                              {notification.isRead ? 'Read' : 'Unread'}
+                            </span>
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                              {notification.type}
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">{notification.body}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{formatDate(notification.createdAt)}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{notification.body}</p>
+                        {notification.meta && (
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                            <strong>Meta:</strong>
+                            <div className="ml-2 mt-1">
+                              {notification.meta.bookingId && (
+                                <div>Booking ID: {notification.meta.bookingId}</div>
+                              )}
+                              {notification.meta.serviceId && (
+                                <div>Service ID: {notification.meta.serviceId}</div>
+                              )}
+                              {notification.meta.providerId && (
+                                <div>Provider ID: {notification.meta.providerId}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          Created: {formatDate(notification.createdAt)} | Updated: {formatDate(notification.updatedAt)}
+                        </p>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available for this booking</p>
+                  </div>
+                )}
+              </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -816,24 +909,6 @@ const BookingsPage = () => {
                       className="px-3 py-1 text-sm font-medium text-red-700 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                     >
                       Cancel Booking
-                    </button>
-                  )}
-                  
-                  {/* Payment Status Update Buttons */}
-                  {selectedBooking.booking.paymentStatus === 'pending' && (
-                    <button
-                      onClick={() => handlePaymentStatusUpdate(selectedBooking.booking.id, 'paid')}
-                      className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 dark:bg-green-900 dark:text-green-200 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
-                    >
-                      Mark Paid
-                    </button>
-                  )}
-                  {selectedBooking.booking.paymentStatus === 'paid' && (
-                    <button
-                      onClick={() => handlePaymentStatusUpdate(selectedBooking.booking.id, 'refunded')}
-                      className="px-3 py-1 text-sm font-medium text-orange-700 bg-orange-100 dark:bg-orange-900 dark:text-orange-200 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-800 transition-colors"
-                    >
-                      Process Refund
                     </button>
                   )}
                 </div>

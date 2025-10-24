@@ -72,6 +72,19 @@ class AdminAPI {
     });
   }
 
+  // Admin-specific profile methods (aliases for consistency)
+  async getAdminProfile() {
+    return this.getProfile();
+  }
+
+  async updateAdminProfile(profileData) {
+    return this.updateProfile(profileData);
+  }
+
+  async changeAdminPassword(passwordData) {
+    return this.changePassword(passwordData.currentPassword, passwordData.newPassword);
+  }
+
   // Dashboard methods
   async getDashboardStats() {
     return this.request('/dashboard/stats');
@@ -126,14 +139,37 @@ class AdminAPI {
     return this.request(`/reviews${queryString ? `?${queryString}` : ''}`);
   }
 
-  async updateReviewStatus(reviewId, status) {
+  async updateReviewVisibility(reviewId, isVisible) {
     return this.request(`/reviews/${reviewId}/status`, {
       method: 'PUT',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ isVisible }),
+    });
+  }
+
+  async deleteReview(reviewId) {
+    return this.request(`/reviews/${reviewId}`, {
+      method: 'DELETE',
     });
   }
 
   // Notification methods
+  async getNotifications(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/notifications${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async markNotificationAsRead(notificationId) {
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: 'PUT',
+    });
+  }
+
+  async deleteNotification(notificationId) {
+    return this.request(`/notifications/${notificationId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async sendNotification(notificationData) {
     return this.request('/notifications/send', {
       method: 'POST',
