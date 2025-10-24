@@ -1,6 +1,6 @@
 // Admin API Service
-const API_BASE_URL = 'http://localhost:8000/api/admin';
-// const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
+// const API_BASE_URL = 'http://localhost:8000/api/admin';
+const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
 
 class AdminAPI {
   // Get auth token from localStorage
