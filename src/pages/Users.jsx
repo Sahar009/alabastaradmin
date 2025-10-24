@@ -737,15 +737,39 @@ const UsersPage = () => {
                           <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.bio}</p>
                         </div>
                       )}
-                      {selectedUser.providerProfile.referralCode && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Referral Code</label>
-                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.referralCode}</p>
+                      {/* Referral Information */}
+                      <div className="md:col-span-2">
+                        <h4 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3">Referral Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedUser.providerProfile.referralCode && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Referral Code</label>
+                              <p className="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                                {selectedUser.providerProfile.referralCode}
+                              </p>
+                            </div>
+                          )}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Referrals</label>
+                            <p className="text-sm text-gray-900 dark:text-white font-semibold">
+                              {selectedUser.providerProfile.totalReferrals || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Commissions Earned</label>
+                            <p className="text-sm text-gray-900 dark:text-white font-semibold text-green-600 dark:text-green-400">
+                              ₦{parseFloat(selectedUser.providerProfile.totalCommissionsEarned || 0).toLocaleString()}
+                            </p>
+                          </div>
+                          {selectedUser.providerProfile.referredBy && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Referred By</label>
+                              <p className="text-sm text-gray-900 dark:text-white">
+                                {selectedUser.providerProfile.referredBy}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Referrals</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.totalReferrals || 0}</p>
                       </div>
                     </div>
                   </div>
