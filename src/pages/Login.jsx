@@ -160,7 +160,7 @@ const Login = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            © 2024 Alabastar. All rights reserved.
+            © 2025 Alabastar. All rights reserved.
           </p>
         </div>
       </div>

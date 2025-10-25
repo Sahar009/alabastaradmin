@@ -19,7 +19,10 @@ import {
   RefreshCw,
   Star,
   Clock,
-  UserPlus
+  UserPlus,
+  Edit,
+  Save,
+  X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminAPI from '../services/adminAPI';
@@ -33,6 +36,13 @@ const UsersPage = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
+  const [isEditingUser, setIsEditingUser] = useState(false);
+  const [isEditingProvider, setIsEditingProvider] = useState(false);
+  const [isEditingRegistration, setIsEditingRegistration] = useState(false);
+  const [editUserData, setEditUserData] = useState({});
+  const [editProviderData, setEditProviderData] = useState({});
+  const [editRegistrationData, setEditRegistrationData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
   
   // Pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -112,6 +122,127 @@ const UsersPage = () => {
       console.error('Error updating user status:', error);
       toast.error('Failed to update user status');
     }
+  };
+
+  const handleEditUser = () => {
+    if (selectedUser) {
+      setEditUserData({
+        fullName: selectedUser.user.fullName || '',
+        email: selectedUser.user.email || '',
+        phone: selectedUser.user.phone || '',
+        alternativePhone: selectedUser.user.alternativePhone || '',
+        role: selectedUser.user.role || 'customer',
+        status: selectedUser.user.status || 'active',
+        isEmailVerified: selectedUser.user.isEmailVerified || false,
+        isPhoneVerified: selectedUser.user.isPhoneVerified || false
+      });
+      setIsEditingUser(true);
+    }
+  };
+
+  const handleEditProvider = () => {
+    if (selectedUser && selectedUser.providerProfile) {
+      setEditProviderData({
+        businessName: selectedUser.providerProfile.businessName || '',
+        category: selectedUser.providerProfile.category || '',
+        subcategories: selectedUser.providerProfile.subcategories || [],
+        bio: selectedUser.providerProfile.bio || '',
+        verificationStatus: selectedUser.providerProfile.verificationStatus || 'pending',
+        locationCity: selectedUser.providerProfile.locationCity || '',
+        locationState: selectedUser.providerProfile.locationState || '',
+        latitude: selectedUser.providerProfile.latitude || '',
+        longitude: selectedUser.providerProfile.longitude || ''
+      });
+      setIsEditingProvider(true);
+    }
+  };
+
+  const handleEditRegistration = () => {
+    if (selectedUser && selectedUser.providerRegistrationProgress) {
+      setEditRegistrationData({
+        currentStep: selectedUser.providerRegistrationProgress.currentStep || 1,
+        stepData: selectedUser.providerRegistrationProgress.stepData || {}
+      });
+      setIsEditingRegistration(true);
+    }
+  };
+
+  const handleSaveUser = async () => {
+    if (!selectedUser) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await adminAPI.updateUser(selectedUser.user.id, editUserData);
+      if (response.success) {
+        toast.success('User updated successfully');
+        setSelectedUser(prev => ({
+          ...prev,
+          user: { ...prev.user, ...editUserData }
+        }));
+        setIsEditingUser(false);
+        fetchUsers(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast.error('Failed to update user');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveProvider = async () => {
+    if (!selectedUser) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await adminAPI.updateProviderProfile(selectedUser.user.id, editProviderData);
+      if (response.success) {
+        toast.success('Provider profile updated successfully');
+        setSelectedUser(prev => ({
+          ...prev,
+          providerProfile: { ...prev.providerProfile, ...editProviderData }
+        }));
+        setIsEditingProvider(false);
+        fetchUsers(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error updating provider profile:', error);
+      toast.error('Failed to update provider profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveRegistration = async () => {
+    if (!selectedUser) return;
+    
+    setIsSaving(true);
+    try {
+      const response = await adminAPI.updateProviderRegistrationProgress(selectedUser.user.id, editRegistrationData);
+      if (response.success) {
+        toast.success('Registration progress updated successfully');
+        setSelectedUser(prev => ({
+          ...prev,
+          providerRegistrationProgress: { ...prev.providerRegistrationProgress, ...editRegistrationData }
+        }));
+        setIsEditingRegistration(false);
+        fetchUsers(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error updating registration progress:', error);
+      toast.error('Failed to update registration progress');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingUser(false);
+    setIsEditingProvider(false);
+    setIsEditingRegistration(false);
+    setEditUserData({});
+    setEditProviderData({});
+    setEditRegistrationData({});
   };
 
   const handleSearch = (e) => {
@@ -536,14 +667,71 @@ const UsersPage = () => {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   User Details - {selectedUser.user.fullName}
                 </h2>
-                <button
-                  onClick={() => setShowUserModal(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  {!isEditingUser && !isEditingProvider && !isEditingRegistration && (
+                    <>
+                      <button
+                        onClick={handleEditUser}
+                        className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit User
+                      </button>
+                      {selectedUser.providerProfile && (
+                        <button
+                          onClick={handleEditProvider}
+                          className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit Provider
+                        </button>
+                      )}
+                      {selectedUser.providerRegistrationProgress && (
+                        <button
+                          onClick={handleEditRegistration}
+                          className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit Registration
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {(isEditingUser || isEditingProvider || isEditingRegistration) && (
+                    <>
+                      <button
+                        onClick={
+                          isEditingUser ? handleSaveUser : 
+                          isEditingProvider ? handleSaveProvider : 
+                          handleSaveRegistration
+                        }
+                        disabled={isSaving}
+                        className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors disabled:opacity-50"
+                      >
+                        <Save className="w-4 h-4" />
+                        {isSaving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/30 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowUserModal(false);
+                      handleCancelEdit();
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -577,25 +765,71 @@ const UsersPage = () => {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.fullName || 'N/A'}</p>
+                      {isEditingUser ? (
+                        <input
+                          type="text"
+                          value={editUserData.fullName}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, fullName: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.fullName || 'N/A'}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.email}</p>
+                      {isEditingUser ? (
+                        <input
+                          type="email"
+                          value={editUserData.email}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, email: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.email}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                      <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.phone || 'N/A'}</p>
+                      {isEditingUser ? (
+                        <input
+                          type="tel"
+                          value={editUserData.phone}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, phone: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.phone || 'N/A'}</p>
+                      )}
                     </div>
-                    {selectedUser.user.alternativePhone && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Alternative Phone</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.alternativePhone}</p>
-                      </div>
-                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Alternative Phone</label>
+                      {isEditingUser ? (
+                        <input
+                          type="tel"
+                          value={editUserData.alternativePhone}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, alternativePhone: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.user.alternativePhone || 'N/A'}</p>
+                      )}
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                      <div className="mt-1">{getRoleBadge(selectedUser.user.role)}</div>
+                      {isEditingUser ? (
+                        <select
+                          value={editUserData.role}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, role: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="customer">Customer</option>
+                          <option value="provider">Provider</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <div className="mt-1">{getRoleBadge(selectedUser.user.role)}</div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Provider</label>
@@ -609,39 +843,79 @@ const UsersPage = () => {
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                      <div className="mt-1">{getStatusBadge(selectedUser.user.status)}</div>
+                      {isEditingUser ? (
+                        <select
+                          value={editUserData.status}
+                          onChange={(e) => setEditUserData(prev => ({ ...prev, status: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="suspended">Suspended</option>
+                        </select>
+                      ) : (
+                        <div className="mt-1">{getStatusBadge(selectedUser.user.status)}</div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Verified</label>
-                      <div className="mt-1">
-                        {selectedUser.user.isEmailVerified ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            <ShieldCheck className="w-3 h-3" />
-                            Verified
+                      {isEditingUser ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={editUserData.isEmailVerified}
+                            onChange={(e) => setEditUserData(prev => ({ ...prev, isEmailVerified: e.target.checked }))}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {editUserData.isEmailVerified ? 'Verified' : 'Not Verified'}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                            <ShieldX className="w-3 h-3" />
-                            Not Verified
-                          </span>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="mt-1">
+                          {selectedUser.user.isEmailVerified ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              <ShieldCheck className="w-3 h-3" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                              <ShieldX className="w-3 h-3" />
+                              Not Verified
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Verified</label>
-                      <div className="mt-1">
-                        {selectedUser.user.isPhoneVerified ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            <ShieldCheck className="w-3 h-3" />
-                            Verified
+                      {isEditingUser ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={editUserData.isPhoneVerified}
+                            onChange={(e) => setEditUserData(prev => ({ ...prev, isPhoneVerified: e.target.checked }))}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {editUserData.isPhoneVerified ? 'Verified' : 'Not Verified'}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                            <ShieldX className="w-3 h-3" />
-                            Not Verified
-                          </span>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="mt-1">
+                          {selectedUser.user.isPhoneVerified ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                              <ShieldCheck className="w-3 h-3" />
+                              Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                              <ShieldX className="w-3 h-3" />
+                              Not Verified
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Joined Date</label>
@@ -693,50 +967,111 @@ const UsersPage = () => {
               )}
 
               {/* Provider Profile - Only show for provider users */}
-              {selectedUser.providerProfile && selectedUser.user.role === 'provider' && (
+              {selectedUser.user.role === 'provider' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Provider Profile</h3>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  
+                  {selectedUser.providerProfile ? (
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Business Name</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.businessName || 'N/A'}</p>
+                        {isEditingProvider ? (
+                          <input
+                            type="text"
+                            value={editProviderData.businessName}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, businessName: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.businessName || 'N/A'}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Service Category</label>
-                        <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.category || 'N/A'}</p>
+                        {isEditingProvider ? (
+                          <input
+                            type="text"
+                            value={editProviderData.category}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, category: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.category || 'N/A'}</p>
+                        )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location</label>
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {selectedUser.providerProfile.locationCity && selectedUser.providerProfile.locationState 
-                            ? `${selectedUser.providerProfile.locationCity}, ${selectedUser.providerProfile.locationState}`
-                            : 'N/A'
-                          }
-                        </p>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location City</label>
+                        {isEditingProvider ? (
+                          <input
+                            type="text"
+                            value={editProviderData.locationCity}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, locationCity: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.locationCity || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location State</label>
+                        {isEditingProvider ? (
+                          <input
+                            type="text"
+                            value={editProviderData.locationState}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, locationState: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.locationState || 'N/A'}</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Verification Status</label>
-                        <div className="mt-1">
-                          {selectedUser.providerProfile.verificationStatus === 'verified' ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                              <ShieldCheck className="w-3 h-3" />
-                              Verified
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                              <Clock className="w-3 h-3" />
-                              Pending
-                            </span>
-                          )}
-                        </div>
+                        {isEditingProvider ? (
+                          <select
+                            value={editProviderData.verificationStatus}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, verificationStatus: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="verified">Verified</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                        ) : (
+                          <div className="mt-1">
+                            {selectedUser.providerProfile.verificationStatus === 'verified' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                <ShieldCheck className="w-3 h-3" />
+                                Verified
+                              </span>
+                            ) : selectedUser.providerProfile.verificationStatus === 'rejected' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                <ShieldX className="w-3 h-3" />
+                                Rejected
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                <Clock className="w-3 h-3" />
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      {selectedUser.providerProfile.bio && (
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
-                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.bio}</p>
-                        </div>
-                      )}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+                        {isEditingProvider ? (
+                          <textarea
+                            value={editProviderData.bio}
+                            onChange={(e) => setEditProviderData(prev => ({ ...prev, bio: e.target.value }))}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                          />
+                        ) : (
+                          <p className="text-sm text-gray-900 dark:text-white">{selectedUser.providerProfile.bio || 'N/A'}</p>
+                        )}
+                      </div>
                       {/* Referral Information */}
                       <div className="md:col-span-2">
                         <h4 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3">Referral Information</h4>
@@ -757,7 +1092,7 @@ const UsersPage = () => {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Total Commissions Earned</label>
-                            <p className="text-sm text-gray-900 dark:text-white font-semibold text-green-600 dark:text-green-400">
+                            <p className="text-sm font-semibold text-green-600 dark:text-green-400">
                               ₦{parseFloat(selectedUser.providerProfile.totalCommissionsEarned || 0).toLocaleString()}
                             </p>
                           </div>
@@ -773,6 +1108,24 @@ const UsersPage = () => {
                       </div>
                     </div>
                   </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Provider Profile</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          This provider hasn't completed their profile setup yet.
+                        </p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Provider profile will appear here once they complete the registration process.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -871,28 +1224,150 @@ const UsersPage = () => {
               )}
 
               {/* Provider Registration Progress - Only show for provider users */}
-              {selectedUser.providerRegistrationProgress && selectedUser.user.role === 'provider' && (
+              {selectedUser.user.role === 'provider' && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Registration Progress</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Registration Progress</h3>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Role: {selectedUser.user.role} | Has Progress: {selectedUser.providerRegistrationProgress ? 'Yes' : 'No'}
+                    </div>
+                  </div>
+                  
+                  {selectedUser.providerRegistrationProgress ? (
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1">
-                        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                          <span>Progress</span>
-                          <span>{selectedUser.providerRegistrationProgress.currentStep}/5</span>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Registration Steps</label>
+                          {isEditingRegistration && (
+                            <span className="text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded">
+                              ✓ Checkboxes enabled - click to update steps
+                            </span>
+                          )}
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${(selectedUser.providerRegistrationProgress.currentStep / 5) * 100}%` }}
-                          ></div>
+                        <div className="space-y-3">
+                          {[1, 2, 3, 4, 5].map((step) => {
+                            const currentStep = isEditingRegistration ? editRegistrationData.currentStep : selectedUser.providerRegistrationProgress.currentStep;
+                            const isCompleted = step <= currentStep;
+                            const isCurrentStep = step === currentStep;
+                            
+                            return (
+                              <div key={step} className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all duration-200 ${
+                                isCompleted 
+                                  ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20' 
+                                  : 'border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-700'
+                              } ${isCurrentStep ? 'ring-2 ring-orange-500' : ''}`}>
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={isCompleted}
+                                    disabled={!isEditingRegistration}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setEditRegistrationData(prev => ({ 
+                                          ...prev, 
+                                          currentStep: Math.max(prev.currentStep, step)
+                                        }));
+                                      } else {
+                                        setEditRegistrationData(prev => ({ 
+                                          ...prev, 
+                                          currentStep: Math.min(prev.currentStep, step - 1)
+                                        }));
+                                      }
+                                    }}
+                                    className={`w-5 h-5 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ${
+                                      !isEditingRegistration ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                    }`}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`text-sm font-medium ${
+                                      isCompleted 
+                                        ? 'text-green-800 dark:text-green-200' 
+                                        : 'text-gray-600 dark:text-gray-400'
+                                    }`}>
+                                      Step {step}
+                                    </span>
+                                    {isCurrentStep && (
+                                      <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-full">
+                                        Current
+                                      </span>
+                                    )}
+                                    {isCompleted && !isCurrentStep && (
+                                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full">
+                                        Completed
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className={`text-xs ${
+                                    isCompleted 
+                                      ? 'text-green-600 dark:text-green-400' 
+                                      : 'text-gray-500 dark:text-gray-500'
+                                  }`}>
+                                    {step === 1 && 'Account Creation'}
+                                    {step === 2 && 'Business Information'}
+                                    {step === 3 && 'Service Details'}
+                                    {step === 4 && 'Verification Documents'}
+                                    {step === 5 && 'Payment & Completion'}
+                                  </p>
+                                </div>
+                                {isCompleted && (
+                                  <div className="text-green-600 dark:text-green-400">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Last Updated: {formatDate(selectedUser.providerRegistrationProgress.lastUpdated)}
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Progress Percentage</label>
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <span>Progress</span>
+                            <span>{Math.round((selectedUser.providerRegistrationProgress.currentStep / 5) * 100)}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                            <div 
+                              className="bg-orange-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${(selectedUser.providerRegistrationProgress.currentStep / 5) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Updated</label>
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {formatDate(selectedUser.providerRegistrationProgress.lastUpdated)}
+                        </p>
                       </div>
                     </div>
                   </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Registration Progress</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                          This provider hasn't started the registration process yet.
+                        </p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          Registration progress will appear here once the provider begins the onboarding process.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

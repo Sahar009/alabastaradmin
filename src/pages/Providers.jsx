@@ -19,10 +19,12 @@ import {
   RefreshCw,
   Shield,
   ShieldCheck,
-  ShieldX
+  ShieldX,
+  UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminAPI from '../services/adminAPI';
+import CreateProviderModal from '../components/CreateProviderModal';
 
 const ProvidersPage = () => {
   const [providers, setProviders] = useState([]);
@@ -31,6 +33,7 @@ const ProvidersPage = () => {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCreateProviderModal, setShowCreateProviderModal] = useState(false);
   
   // Pagination and filters
   const [currentPage, setCurrentPage] = useState(1);
@@ -260,6 +263,13 @@ const ProvidersPage = () => {
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
+          </button>
+          <button
+            onClick={() => setShowCreateProviderModal(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Create Provider
           </button>
           <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors">
             <Download className="w-4 h-4" />
@@ -748,6 +758,16 @@ const ProvidersPage = () => {
           </div>
         </div>
       )}
+
+      {/* Create Provider Modal */}
+      <CreateProviderModal
+        isOpen={showCreateProviderModal}
+        onClose={() => setShowCreateProviderModal(false)}
+        onSuccess={() => {
+          fetchProviders(); // Refresh the providers list
+          setShowCreateProviderModal(false);
+        }}
+      />
     </div>
   );
 };

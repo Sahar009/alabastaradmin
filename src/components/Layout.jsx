@@ -129,7 +129,7 @@ const Layout = ({ children }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'users', label: 'Users', icon: Users, path: '/users' },
-    { id: 'providers', label: 'Providers', icon: UserCheck, path: '/providers' },
+    // { id: 'providers', label: 'Providers', icon: UserCheck, path: '/providers' },
     { id: 'bookings', label: 'Bookings', icon: Calendar, path: '/bookings' },
     { id: 'services', label: 'Services', icon: Wrench, path: '/services' },
     { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard, path: '/subscriptions' },

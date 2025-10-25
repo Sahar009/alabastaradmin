@@ -93,6 +93,7 @@ const SubscriptionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
+  const [planFilter, setPlanFilter] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('DESC');
   const [viewMode, setViewMode] = useState('grid');
@@ -104,7 +105,7 @@ const SubscriptionsPage = () => {
     } else {
       fetchSubscriptions();
     }
-  }, [activeTab, currentPage, itemsPerPage, searchTerm, statusFilter, intervalFilter, sortBy, sortOrder]);
+  }, [activeTab, currentPage, itemsPerPage, searchTerm, statusFilter, planFilter, sortBy, sortOrder]);
 
   const fetchPlans = async () => {
     try {
@@ -145,6 +146,7 @@ const SubscriptionsPage = () => {
         limit: itemsPerPage,
         search: searchTerm,
         status: statusFilter,
+        planId: planFilter,
         sortBy,
         sortOrder
       };
@@ -410,6 +412,24 @@ const SubscriptionsPage = () => {
     );
   };
 
+  const getVerificationBadge = (status) => {
+    const statusConfig = {
+      verified: { color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', icon: ShieldCheck },
+      pending: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', icon: Clock },
+      rejected: { color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', icon: ShieldX }
+    };
+    
+    const config = statusConfig[status] || statusConfig.pending;
+    const Icon = config.icon;
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status?.charAt(0).toUpperCase() + status?.slice(1)}
+      </span>
+    );
+  };
+
   // Loading skeleton components
   const PlanCardSkeleton = () => (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 animate-pulse">
@@ -558,7 +578,7 @@ const SubscriptionsPage = () => {
       {/* Filters */}
       {showFilters && (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Search
@@ -615,6 +635,22 @@ const SubscriptionsPage = () => {
                 </select>
               </div>
             )}
+            {activeTab === 'subscriptions' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Plan Type
+                </label>
+                <select
+                  value={planFilter}
+                  onChange={(e) => setPlanFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  <option value="">All Plans</option>
+                  <option value="c506fd50-78a7-44a2-a80c-9f063a9fcacf">Basic Plan</option>
+                  <option value="plan-premium-1759842947298">Premium Plan</option>
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sort By
@@ -628,8 +664,101 @@ const SubscriptionsPage = () => {
                 <option value="name">Name</option>
                 <option value="price">Price</option>
                 <option value="updatedAt">Updated Date</option>
+                {activeTab === 'subscriptions' && (
+                  <>
+                    <option value="currentPeriodEnd">Expiry Date</option>
+                    <option value="status">Status</option>
+                  </>
+                )}
               </select>
             </div>
+          </div>
+          
+          {/* Clear Filters Button */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('');
+                setIntervalFilter('');
+                setPlanFilter('');
+                setSortBy('createdAt');
+                setSortOrder('DESC');
+              }}
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear All Filters
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Active Filters Summary */}
+      {(searchTerm || statusFilter || intervalFilter || planFilter) && (
+        <div className="bg-gradient-to-r from-pink-50 to-orange-50 dark:from-pink-900/20 dark:to-orange-900/20 rounded-xl border border-pink-200 dark:border-pink-800 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+              <span className="text-sm font-medium text-pink-800 dark:text-pink-200">Active Filters:</span>
+            </div>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('');
+                setIntervalFilter('');
+                setPlanFilter('');
+              }}
+              className="text-xs text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {searchTerm && (
+              <span className="inline-flex items-center px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 text-xs font-medium rounded-full">
+                Search: "{searchTerm}"
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="ml-1 text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {statusFilter && (
+              <span className="inline-flex items-center px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 text-xs font-medium rounded-full">
+                Status: {statusFilter}
+                <button
+                  onClick={() => setStatusFilter('')}
+                  className="ml-1 text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {intervalFilter && (
+              <span className="inline-flex items-center px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 text-xs font-medium rounded-full">
+                Interval: {intervalFilter}
+                <button
+                  onClick={() => setIntervalFilter('')}
+                  className="ml-1 text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {planFilter && (
+              <span className="inline-flex items-center px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 text-xs font-medium rounded-full">
+                Plan: {planFilter === 'c506fd50-78a7-44a2-a80c-9f063a9fcacf' ? 'Basic Plan' : planFilter === 'plan-premium-1759842947298' ? 'Premium Plan' : planFilter}
+                <button
+                  onClick={() => setPlanFilter('')}
+                  className="ml-1 text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-200"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -886,6 +1015,11 @@ const SubscriptionsPage = () => {
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   Showing {subscriptions.length} of {totalItems} subscriptions
+                  {(searchTerm || statusFilter || intervalFilter || planFilter) && (
+                    <span className="ml-2 px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-full text-xs font-medium">
+                      Filtered
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -945,6 +1079,11 @@ const SubscriptionsPage = () => {
                             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                               {getIntervalBadge(subscription.SubscriptionPlan?.interval)}
                             </div>
+                          </div>
+                          
+                          {/* Verification Status */}
+                          <div className="mt-2">
+                            {getVerificationBadge(subscription.ProviderProfile?.verificationStatus)}
                           </div>
                           
                           <div className={`${viewMode === 'list' ? 'flex items-center justify-between mt-4' : 'flex justify-between items-center mt-4'}`}>

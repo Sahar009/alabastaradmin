@@ -1,6 +1,6 @@
 // Admin API Service
-// const API_BASE_URL = 'http://localhost:8000/api/admin';
-const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
+const API_BASE_URL = 'http://localhost:8000/api/admin';
+// const API_BASE_URL = 'https://alabastar-backend.onrender.com/api/admin';
 
 class AdminAPI {
   // Get auth token from localStorage
@@ -203,6 +203,27 @@ class AdminAPI {
     });
   }
 
+  async updateUser(userId, userData) {
+    return this.request(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateProviderProfile(userId, profileData) {
+    return this.request(`/users/${userId}/provider-profile`, {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    });
+  }
+
+  async updateProviderRegistrationProgress(userId, progressData) {
+    return this.request(`/users/${userId}/provider-registration-progress`, {
+      method: 'PUT',
+      body: JSON.stringify(progressData),
+    });
+  }
+
   // ==================== PROVIDER MANAGEMENT ====================
   
   async getProviders(params = {}) {
@@ -225,6 +246,13 @@ class AdminAPI {
     return this.request(`/providers/${providerId}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
+    });
+  }
+
+  async createProvider(providerData) {
+    return this.request('/providers/create', {
+      method: 'POST',
+      body: JSON.stringify(providerData),
     });
   }
 
