@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Send, Plus, Search, Filter, CheckCircle, XCircle, RefreshCw, Eye, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminAPI from '../services/adminAPI';
+import SendNotificationModal from '../components/SendNotificationModal';
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -91,6 +92,10 @@ const Notifications = () => {
 
   const handleSendNotification = () => {
     setShowSendModal(true);
+  };
+
+  const handleNotificationSent = () => {
+    fetchNotifications();
   };
 
   const getTypeBadge = (type, category) => {
@@ -295,6 +300,13 @@ const Notifications = () => {
           </div>
         )}
       </div>
+
+      {/* Send Notification Modal */}
+      <SendNotificationModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        onSent={handleNotificationSent}
+      />
     </div>
   );
 };
