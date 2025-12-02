@@ -32,7 +32,7 @@ Changed `border-3` to `border-4` in the loading spinner class:
 
 ## 🎯 **How to Test:**
 1. **Visit**: `http://localhost:5173`
-2. **Login**: admin@alabastar.com / admin123
+2. **Login**: admin@alabastar.ng / admin123
 3. **Check**: No console errors
 4. **Verify**: All styling works correctly
 

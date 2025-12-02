@@ -93,7 +93,7 @@ A comprehensive admin dashboard for managing the Alabastar service provider plat
    ```
 
 ### Demo Login
-- **Email**: admin@alabastar.com
+- **Email**: admin@alabastar.ng
 - **Password**: admin123
 
 ## Project Structure

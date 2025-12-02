@@ -60,7 +60,7 @@ npm run setup-admin
 
 ### **4. Test Login**
 - **Visit**: `http://localhost:5173`
-- **Login**: admin@alabastar.com / admin123
+- **Login**: admin@alabastar.ng / admin123
 - **Expected**: Successful login and redirect to dashboard
 
 ## 🔗 **API Endpoints Connected:**

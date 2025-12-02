@@ -90,7 +90,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-colors"
-                  placeholder="admin@alabastar.com"
+                  placeholder="admin@alabastar.ng"
                   required
                 />
               </div>
@@ -151,7 +151,7 @@ const Login = () => {
               Demo Credentials:
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Email: admin@alabastar.com<br />
+              Email: admin@alabastar.ng<br />
               Password: admin123
             </p>
           </div>

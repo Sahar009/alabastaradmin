@@ -363,7 +363,7 @@ const Layout = ({ children }) => {
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">Admin User</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">admin@alabastar.com</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">admin@alabastar.ng</p>
                 </div>
               </div>
             </div>

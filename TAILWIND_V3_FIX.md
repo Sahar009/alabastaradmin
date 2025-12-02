@@ -31,7 +31,7 @@ The admin dashboard should now:
 ## 🎯 **How to Test:**
 
 1. **Visit**: `http://localhost:5173`
-2. **Login**: admin@alabastar.com / admin123
+2. **Login**: admin@alabastar.ng / admin123
 3. **Check**: All styling should now be properly applied
 4. **Test**: Dark/light mode toggle
 5. **Verify**: Responsive design

@@ -6,7 +6,7 @@ import adminAPI from '../services/adminAPI';
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [settings, setSettings] = useState({
-    supportEmail: 'support@alabastar.com',
+    supportEmail: 'support@alabastar.ng',
     enableNotifications: true,
     enableEmailNotifications: true,
     enableSMSNotifications: false,
