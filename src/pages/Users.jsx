@@ -195,20 +195,12 @@ const UsersPage = () => {
     
     setIsSaving(true);
     try {
-      // Ensure verificationStatus is included
-      const dataToSend = {
-        ...editProviderData,
-        verificationStatus: editProviderData.verificationStatus || selectedUser.providerProfile?.verificationStatus || 'pending'
-      };
-      
-      console.log('Saving provider profile with data:', dataToSend);
-      
-      const response = await adminAPI.updateProviderProfile(selectedUser.user.id, dataToSend);
+      const response = await adminAPI.updateProviderProfile(selectedUser.user.id, editProviderData);
       if (response.success) {
         toast.success('Provider profile updated successfully');
         setSelectedUser(prev => ({
           ...prev,
-          providerProfile: { ...prev.providerProfile, ...dataToSend }
+          providerProfile: { ...prev.providerProfile, ...editProviderData }
         }));
         setIsEditingProvider(false);
         fetchUsers(); // Refresh the list
